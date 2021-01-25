@@ -54,6 +54,9 @@ exports.allUsers = async (req, res) => {
 exports.getUser = (req, res) => {
   try {
     const singleUser = req.profile;
+    singleUser.hashed_password = undefined;
+    singleUser.salt = undefined;
+
     res.send(singleUser);
   } catch (err) {
     res.status(404).json({
