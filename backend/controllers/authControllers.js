@@ -15,6 +15,8 @@ exports.signup = async (req,res) =>{
           })
       } 
             const user = await new User(req.body)
+            user.hashed_password = undefined;
+            user.salt = undefined;
              await user.save()
              res.status(200).json({
                  user
