@@ -4,29 +4,21 @@ const expressJwt = require('express-jwt');
 
 
 exports.signup = async (req,res) =>{
-
-    const { email } = req.body
-    
-    try {
-      const userExist = await User.findOne({email: email}) 
+  const { email } = req.body
+  const userExist = await User.findOne({email: email}) 
       if(userExist){
           return res.status(403).json({
               error: "Email is already exist"
           })
       } 
-            const user = await new User(req.body)
-            user.hashed_password = undefined;
-            user.salt = undefined;
+            const user = new User(req.body)
+            
              await user.save()
+             user.hashed_password = undefined
+             user.salt = undefined
              res.status(200).json({
                  user
              })
-    } catch (error) {
-       return res.status(401).json({
-            error:"Email is takeen"
-        })
-    }
-    
 }
 
 exports.signin = async (req,res) =>{
