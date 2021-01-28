@@ -1,31 +1,37 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import '../css/nav.css'
 /**
 * @author
 * @function Nav
 **/
+const isActive = (history, path) =>{
+  if (history.location.pathname === path) return { color: '#5d13e7' };
+    else return { color: '#000' };
+}
 
-const Nav = () => {
+const Nav = ({history}) => {
   return(
    <>
    <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container">
-          <a className="navbar-brand" href="#">Navbar</a>
+          <Link className="navbar-brand" to="/">Navbar</Link>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon" />
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link className="nav-link active" to="/">Home</Link>
+                <Link className="nav-link" style={isActive(history, '/')} to="/">Home</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="">Link</Link>
+                <Link className={history.location.pathname === '/users' ? 'active nav-link' : 'not-active nav-link'} to="/users">users</Link>
               </li>
           
               <li className="nav-item">
-                <Link className="nav-link" to="">Disabled</Link>
+              <Link to={`/post/create`} style={isActive(history, `/post/create`)} className="nav-link">
+                    Create Post
+                </Link>
               </li>
               
             </ul>
@@ -46,4 +52,4 @@ const Nav = () => {
 
  }
 
-export default Nav
+export default withRouter(Nav)
