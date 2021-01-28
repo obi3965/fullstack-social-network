@@ -6,6 +6,7 @@ import { signup } from '../auth'
 import '../css/signup.css'
 
 const Signup = () => {
+    const [loading, setLoading] = useState(false);
     const [values, setValues] = useState({
         name: '',
         email:'',
@@ -15,11 +16,13 @@ const Signup = () => {
     });
 
     const { name, email, password, success, error } = values;
-
+    
+    
     const handleChange = name => event => {
         setValues({ ...values, error: false, [name]: event.target.value });
     };
 
+    const showLoading = () => (loading ? <div className="alert alert-info">Loading...</div> : '');
     const clickSubmit = event => {
         event.preventDefault();
         setValues({ ...values, error: false });
@@ -44,7 +47,7 @@ const Signup = () => {
 
 
     const showError = () => (
-        <div className="alert alert-danger" style={{ display: error ? '' : 'none' }}>
+        <div className="alert bg-danger alert-danger text-white" style={{ display: error ? '' : 'none' }}>
             {error}
         </div>
     );
@@ -57,19 +60,22 @@ const Signup = () => {
 
     return (
         <div className="container">
-            
-        <div className="col-md-6 mx-auto text-center">
-          <div className="header-title">
-            <h1 className="wv-heading--title">
-              Check out — it’s free!
-            </h1>
-            <h2 className="wv-heading--subtitle">
-              Lorem ipsum dolor sit amet! Neque porro quisquam est qui do dolor amet, adipisci velit...
-            </h2>
-          </div>
+           <div className="header-title">
+            <h1>
+            <span>OBIGRAM</span> - it's free
+            </h1>       
+          </div> 
+          <div className="row mx-auto">
+        <div className="col-md-4 mx-auto text-center">
+          
+          {showSuccess()}
+            {showError()}
+            {showLoading()}
         </div>
+           </div> 
         <div className="row">
           <div className="col-md-4 mx-auto">
+          
             <div className="myform form ">
               <form name="login">
                 <div className="form-group mt-1">
@@ -91,15 +97,14 @@ const Signup = () => {
                   </div>
                 </div>
                 <div className="form-group">
-                  {/* <Link className="btn btn-block g-button" href="#">
+                  <Link className="btn btn-block g-button" to="">
                     <i className="fa fa-google" /> Sign up with Google
-                  </Link> */}
+                  </Link>
                 </div>
                 
               </form>
             </div>
-            {showSuccess()}
-            {showError()}
+            
           </div>
         </div>
       </div>

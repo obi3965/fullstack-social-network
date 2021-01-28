@@ -31,20 +31,20 @@
     transition: border .1s linear;
     }
     .header-title{
-    margin: 5rem 0;
+    margin: 3rem 0;
     }
-    h1{
+   .header-title h1{
     font-size: 31px;
     line-height: 40px;
     font-weight: 600;
-    color:#4c5357;
+    color:#494a4b;
+    text-align: center;
+    text-transform: capitalize;
     }
-    h2{
-    color: #5e8396;
-    font-size: 21px;
-    line-height: 32px;
-    font-weight: 400;
+    .header-title span{
+      color: #5d13e7;
     }
+    
     .login-or {
     position: relative;
     color: #aaa;

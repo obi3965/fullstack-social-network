@@ -1,0 +1,14 @@
+.user{
+    list-style: none;
+}
+.navbar{
+    background-color: #fff !important;
+    box-shadow: 2px 0px 7px 0px rgba(0,0,0,0.2);
+}
+.user li{
+    background-color: #5d13e7;
+    margin-left: 12px;
+}
+.user li a{
+    color:#fff;
+}
