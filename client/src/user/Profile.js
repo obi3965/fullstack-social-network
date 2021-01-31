@@ -28,7 +28,7 @@ class Profile extends Component {
     init = userId => {
         const token = isAuthenticated().token;
         read(userId, token).then(data => {
-            console.log(data)
+            
           if (data.error) {
             this.setState({ redirectToSignin: true });
           } else {

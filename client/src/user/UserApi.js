@@ -55,3 +55,17 @@ export const update = (userId, token, user) => {
         console.log(err)
     })
  }
+
+
+ export const list = () => {
+     const data = {
+       methods: "GET"
+     }
+     return fetch(`${API}/users`, data)
+     .then(response => {
+         return response.json()
+     }) 
+     .catch(err => {
+       console.log(err);
+     })
+ }
