@@ -4,7 +4,7 @@ import { isAuthenticated } from "../auth";
 import { remove } from "./UserApi";
 import { signout } from "../auth";
 
-class Delete extends Component {
+class DeleteUser extends Component {
     state = {
         redirect: false
     };
@@ -48,4 +48,4 @@ class Delete extends Component {
     }
 }
 
-export default Delete;
+export default DeleteUser;

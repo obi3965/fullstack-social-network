@@ -32,7 +32,7 @@ class Users extends Component {
           {users.map((user, i) => (
                 <div className="card col-md-4" key={i}>
                     <img
-                        style={{ height: "200px", width: "auto" }}
+                        style={{ height: "180px", width: "auto" }}
                         className="img-thumbnail"
                        src={image} alt={user.name}
                         

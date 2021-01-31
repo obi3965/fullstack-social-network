@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { isAuthenticated } from "../auth";
 import { read } from "../user/UserApi";
 import { Link, Redirect } from "react-router-dom";
-// import Delete from "./Delete";
+import image from '../images/avatar.png'
+import DeleteUser from "./DeleteUser";
 /**
  * @author
  * @function Profile
@@ -49,15 +50,22 @@ componentDidMount () {
   if (redirectToSignin) return <Redirect to="/signin" />;
   return(
    <div className="container">
-      <div className="row mx-auto">
-          <div className="col-lg-6 col-md-6 col-sm-6 col-sm-12">
+      <div className="row mt-4 mx-auto d-flex justify-content-center align-items-center">
+          <div className="col-lg-4 col-md-6 col-sm-6 col-sm-12">
               <div className="profile">
-                  <p> Name {isAuthenticated().user.name}</p>
-                  <p> email {isAuthenticated().user.email}</p>
-                  <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
+                 <img
+                        style={{ height: "", width: "100%" }}
+                        className="img-thumbnail"
+                       src={image} alt={user.name}
+                        
+                    />
+                  
               </div>
           </div>
-          <div className="col-lg-6 col-md-6 col-sm-6 col-sm-12">
+          <div className="col-lg-8 col-md-6 col-sm-6 col-sm-12">
+                  <p> Name {user.name}</p>
+                  <p> email {user.email}</p>
+                  <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
             {isAuthenticated().user._id == this.state.user._id && (
               <div className="d-inline-block mt-5">
                 <Link
@@ -67,11 +75,8 @@ componentDidMount () {
                   edit
                 </Link>
 
-                <Link
-                  className="btn btn-raised btn-success ml-5"
-                  to={`/user/delete/${user._id}`}
-                >
-                  delete
+                <Link>
+                 <DeleteUser/>
                 </Link>
               </div>
             )}
