@@ -1,15 +1,20 @@
-import React from 'react'
+import React, { Component } from 'react'
+
 
 /**
 * @author
-* @function Users
+* @class Users
 **/
 
-const Users = (props) => {
+class Users extends Component {
+ state = {}
+ render() {
   return(
-    <div>Users</div>
-   )
-
+   <div>Users</div>
+    )
+   }
  }
+
+
 
 export default Users
