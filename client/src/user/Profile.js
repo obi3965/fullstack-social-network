@@ -5,28 +5,42 @@ import { Link, Redirect } from "react-router-dom";
 import image from '../images/avatar.png'
 import DeleteUser from "./DeleteUser";
 import { API } from "../urlConfig";
-/**
- * @author
- * @function Profile
- **/
+import FollowProfile from "./FollowProfile";
 
-
-
-
-/**
-* @author
-* @class Profile
-**/
 
 class Profile extends Component {
  constructor(){
     super()
         this.state = {
-            user: '',
+            user: {following: [], followers: []},
+            following: false,
             redirectToSignin: false,
             error: "",
         }
     }
+
+     // check follow
+    checkFollow = user => {
+    const jwt = isAuthenticated();
+    const match = user.followers.find(follower => {
+      // one id has many other ids (followers) and vice versa
+      return follower._id === jwt.user._id;
+    });
+    return match;
+  };
+
+    clickFollowButton = callApi => {
+      const userId = isAuthenticated().user._id;
+      const token = isAuthenticated().token;
+  
+      callApi(userId, token, this.state.user._id).then(data => {
+        if (data.error) {
+          this.setState({ error: data.error });
+        } else {
+          this.setState({ user: data, following: !this.state.following });
+        }
+      });
+    };
 
     init = userId => {
         const token = isAuthenticated().token;
@@ -35,12 +49,13 @@ class Profile extends Component {
           if (data.error) {
             this.setState({ redirectToSignin: true });
           } else {
-            
-            this.setState({ user: data,});
+            let following = this.checkFollow(data);
+            this.setState({ user: data, following });
            
           }
         });
       };
+     
  
 componentDidMount () {
   const userId = this.props.match.params.userId;
@@ -80,7 +95,7 @@ componentWillReceiveProps(props) {
                   <p> Name {user.name}</p>
                   <p> email {user.email}</p>
                   <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
-            {isAuthenticated().user._id === this.state.user._id && (
+            {isAuthenticated().user._id === this.state.user._id ? (
               <div className="d-inline-block mt-5">
                 <Link
                   className="btn btn-raised btn-info "
@@ -93,6 +108,11 @@ componentWillReceiveProps(props) {
                  <DeleteUser userId={user._id}/>
                 </Link>
               </div>
+            ):(
+              <FollowProfile
+              following={this.state.following}
+              onButtonClick={this.clickFollowButton}
+              />
             )}
           </div>
       </div>
