@@ -5,7 +5,7 @@ import { signup } from "../auth";
 import "../css/signup.css";
 
 const Signup = () => {
-  const [loading, setLoading] = useState(false);
+  
   const [values, setValues] = useState({
     name: "",
     email: "",
@@ -20,8 +20,8 @@ const Signup = () => {
     setValues({ ...values, error: false, [name]: event.target.value });
   };
 
-  const showLoading = () =>
-    loading ? <div className="alert alert-info">Loading...</div> : "";
+  // const showLoading = () =>
+  //   loading ? <div className="alert alert-info">Loading...</div> : "";
   const clickSubmit = (event) => {
     event.preventDefault();
     setValues({ ...values, error: false });
@@ -70,7 +70,7 @@ const Signup = () => {
         <div className="col-md-4 mx-auto text-center">
           {showSuccess()}
           {showError()}
-          {showLoading()}
+          
         </div>
       </div>
       <div className="row">

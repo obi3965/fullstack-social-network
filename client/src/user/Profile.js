@@ -4,6 +4,7 @@ import { read } from "../user/UserApi";
 import { Link, Redirect } from "react-router-dom";
 import image from '../images/avatar.png'
 import DeleteUser from "./DeleteUser";
+import { API } from "../urlConfig";
 /**
  * @author
  * @function Profile
@@ -22,7 +23,8 @@ class Profile extends Component {
     super()
         this.state = {
             user: '',
-            redirectToSignin: false
+            redirectToSignin: false,
+            error: "",
         }
     }
 
@@ -45,20 +47,32 @@ componentDidMount () {
   this.init(userId)
 }
 
+componentWillReceiveProps(props) {
+  const userId = props.match.params.userId;
+  this.init(userId);
+}
+
  render() {
   const { redirectToSignin, user } = this.state;
   if (redirectToSignin) return <Redirect to="/signin" />;
+  const photoUrl = user._id
+  ? `${API}/user/photo/${
+      user._id
+    }?${new Date().getTime()}`
+  : image;
+
   return(
    <div className="container">
       <div className="row mt-4 mx-auto d-flex justify-content-center align-items-center">
           <div className="col-lg-4 col-md-6 col-sm-6 col-sm-12">
               <div className="profile">
-                 <img
-                        style={{ height: "", width: "100%" }}
-                        className="img-thumbnail"
-                       src={image} alt={user.name}
-                        
-                    />
+              <img
+              style={{ height: "200px", width: "auto" }}
+              className="img-thumbnail"
+              src={photoUrl}
+              onError={i => (i.target.src = `${image}`)}
+              alt={user.name}
+            />
                   
               </div>
           </div>
@@ -66,17 +80,17 @@ componentDidMount () {
                   <p> Name {user.name}</p>
                   <p> email {user.email}</p>
                   <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
-            {isAuthenticated().user._id == this.state.user._id && (
+            {isAuthenticated().user._id === this.state.user._id && (
               <div className="d-inline-block mt-5">
                 <Link
-                  className="btn btn-raised btn-info ml-3"
+                  className="btn btn-raised btn-info "
                   to={`/user/edit/${user._id}`}
                 >
-                  edit
+                  edit profile
                 </Link>
 
                 <Link>
-                 <DeleteUser/>
+                 <DeleteUser userId={user._id}/>
                 </Link>
               </div>
             )}

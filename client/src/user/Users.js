@@ -12,7 +12,8 @@ class Users extends Component {
   constructor() {
       super();
       this.state = {
-          users: []
+          users: [],
+          error:''
       };
   }
 
