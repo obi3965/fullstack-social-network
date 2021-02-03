@@ -96,6 +96,12 @@ componentWillReceiveProps(props) {
             )}
           </div>
       </div>
+
+      <div className="row m-auto">
+        <div className="col-md-4">
+          <p>{user.about}</p>
+        </div>
+      </div>
    </div>
     )
    }

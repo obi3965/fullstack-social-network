@@ -45,7 +45,7 @@ class EditProfile extends Component {
   }
 
   isValid = () => {
-    const { name, email, password, fileSize } = this.state;
+    const { name, email, password, fileSize,about } = this.state;
     if (fileSize > 1000000) {
       this.setState({
         error: "File size should be less than 100kb",
@@ -57,6 +57,10 @@ class EditProfile extends Component {
       this.setState({ error: "Name is required", loading: false });
       return false;
     }
+    if (about.length === 0) {
+        this.setState({ error: "about is required", loading: false });
+        return false;
+      }
     // email@domain.com
     if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
       this.setState({
