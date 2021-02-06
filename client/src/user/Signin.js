@@ -1,121 +1,175 @@
-import React, { useState } from "react";
-import { signin, authenticate } from "../auth";
+import React, { Component } from "react";
 import { Link, Redirect } from "react-router-dom";
-/**
- * @author
- * @function Signin
- **/
+import { signin, authenticate } from "../auth";
 
-const Signin = () => {
-  const [values, setValues] = useState({
-    email: "",
-    password: "",
-    error: "",
-    loading: false,
-    redirectToRefer: false,
-  });
-  const { email, password, loading, error, redirectToRefer } = values;
-  const handleChange = (name) => (event) => {
-    setValues({ ...values, error: false, [name]: event.target.value });
-  };
 
-  const clickSubmit = (event) => {
-    event.preventDefault();
-    setValues({ ...values, error: false, loading: true });
-    signin({ email, password }).then((data) => {
-      if (data.error) {
-        setValues({ ...values, error: data.error, loading: false });
-      } else {
-        authenticate(data, () => {
-          setValues({
-            ...values,
-            redirectToRefer: true,
-          });
-        });
-      }
-    });
-  };
+class Signin extends Component {
+    constructor() {
+        super();
+        this.state = {
+            email: "",
+            password: "",
+            error: "",
+            redirectToReferer: false,
+            loading: false,
+            recaptcha: false
+        };
+    }
 
-  if (redirectToRefer) {
-    return <Redirect to="/" />;
-  }
+    handleChange = name => event => {
+        this.setState({ error: "" });
+        this.setState({ [name]: event.target.value });
+    };
 
-  const signInForm = () => (
-    <form name="login">
-      <div className="form-group mt-2">
-        <input
-          type="email"
-          name="email"
-          value={email}
-          onChange={handleChange("email")}
-          className="form-control my-input"
-          id="email"
-          placeholder="Email"
-          autoComplete="off"
-        />
-      </div>
-      <div className="form-group mt-2">
-        <input
-          type="password"
-          value={password}
-          onChange={handleChange("password")}
-          name="password"
-          id="password"
-          className="form-control my-input"
-          placeholder="Your Password"
-          autoComplete="off"
-        />
-      </div>
-      <div className="text-center mt-2 ">
-        <button
-          type="submit"
-          onClick={clickSubmit}
-          className=" btn btn-block send-button tx-tfm"
-        >
-          signin
-        </button>
-      </div>
-      <div className="col-md-12 ">
-        <div className="login-or">
-          <hr className="hr-or" />
-          <span className="span-or">or</span>
-        </div>
-      </div>
-      <div className="form-group">
-        <Link className="btn btn-block g-button" to="/signup">
-          <i className="fa fa-google" /> Sign up
-        </Link>
-      </div>
-    </form>
-  );
+    recaptchaHandler = e => {
+        this.setState({ error: "" });
+        let userDay = e.target.value.toLowerCase();
+        let dayCount;
 
-  const showError = () => (
-    <div
-      className="alert bg-danger alert-danger text-white"
-      style={{ display: error ? "" : "none" }}
-    >
-      {error}
-    </div>
-  );
+        if (userDay === "sunday") {
+            dayCount = 0;
+        } else if (userDay === "monday") {
+            dayCount = 1;
+        } else if (userDay === "tuesday") {
+            dayCount = 2;
+        } else if (userDay === "wednesday") {
+            dayCount = 3;
+        } else if (userDay === "thursday") {
+            dayCount = 4;
+        } else if (userDay === "friday") {
+            dayCount = 5;
+        } else if (userDay === "saturday") {
+            dayCount = 6;
+        }
 
-  const showLoading = () =>
-    loading && (
-      <div className="alert alert-info">
-        <h2>Loading...</h2>
-      </div>
+        if (dayCount === new Date().getDay()) {
+            this.setState({ recaptcha: true });
+            return true;
+        } else {
+            this.setState({
+                recaptcha: false
+            });
+            return false;
+        }
+    };
+
+    clickSubmit = event => {
+        event.preventDefault();
+        this.setState({ loading: true });
+        const { email, password } = this.state;
+        const user = {
+            email,
+            password
+        };
+        // console.log(user);
+        if (this.state.recaptcha) {
+            signin(user).then(data => {
+                if (data.error) {
+                    this.setState({ error: data.error, loading: false });
+                } else {
+                    // authenticate
+                    authenticate(data, () => {
+                        this.setState({ redirectToReferer: true });
+                    });
+                }
+            });
+        } else {
+            this.setState({
+                loading: false,
+                error: "What day is today? Please write a correct answer!"
+            });
+        }
+    };
+
+    signinForm = (email, password, recaptcha) => (
+        <form>
+            <div className="form-group">
+                <label className="text-muted">Email</label>
+                <input
+                    onChange={this.handleChange("email")}
+                    type="email"
+                    className="form-control"
+                    value={email}
+                />
+            </div>
+            <div className="form-group">
+                <label className="text-muted">Password</label>
+                <input
+                    onChange={this.handleChange("password")}
+                    type="password"
+                    className="form-control"
+                    value={password}
+                />
+            </div>
+
+            <div className="form-group">
+                <label className="text-muted">
+                    {recaptcha ? "Thanks. You got it!" : "What day is today?"}
+                </label>
+
+                <input
+                    onChange={this.recaptchaHandler}
+                    type="text"
+                    className="form-control"
+                />
+            </div>
+
+            <button
+                onClick={this.clickSubmit}
+                className="btn btn-raised btn-primary"
+            >
+                Submit
+            </button>
+        </form>
     );
 
-  return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-4 mx-auto">
-          {showLoading()}
-          {showError()}
-          {signInForm()}
-        </div>
-      </div>
-    </div>
-  );
-};
+    render() {
+        const {
+            email,
+            password,
+            error,
+            redirectToReferer,
+            loading,
+            recaptcha
+        } = this.state;
+
+        if (redirectToReferer) {
+            return <Redirect to="/" />;
+        }
+
+        return (
+            <div className="container">
+                <h2 className="mt-5 mb-5">SignIn</h2>
+               
+                <div
+                    className="alert alert-danger"
+                    style={{ display: error ? "" : "none" }}
+                >
+                    {error}
+                </div>
+
+                {loading ? (
+                    <div className="jumbotron text-center">
+                        <h2>Loading...</h2>
+                    </div>
+                ) : (
+                    ""
+                )}
+
+                {this.signinForm(email, password, recaptcha)}
+
+                <p>
+                    <Link
+                        to="/forgot-password"
+                        className="btn btn-raised btn-danger"
+                    >
+                        {" "}
+                        Forgot Password
+                    </Link>
+                </p>
+            </div>
+        );
+    }
+}
 
 export default Signin;

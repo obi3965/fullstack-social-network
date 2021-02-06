@@ -1,7 +1,7 @@
 const express = require('express')
 
 const {userById, allUsers, getUser, updateUser, deleteUser, hasAuthorization, userPhoto,
-addFollowing, addFollower, removeFollower, removeFollowing } = require('../controllers/userController')
+addFollowing, addFollower, removeFollower, removeFollowing, findPeople } = require('../controllers/userController')
 const { requireSignin } = require("../controllers/authControllers");
 
 const router = express.Router()
@@ -18,6 +18,9 @@ router.get("/user/photo/:userId", userPhoto);
 //user following and folowers routes
 router.put('/user/follow', requireSignin, addFollowing, addFollower)
 router.put("/user/unfollow", requireSignin, removeFollowing, removeFollower);
+
+// who to follow
+router.get("/user/findpeople/:userId", requireSignin, findPeople);
 
 
 // any route containing :userId, our app will first execute userByID()

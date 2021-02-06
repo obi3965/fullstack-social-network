@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { isAuthenticated } from "../auth";
-import { read, update, updateUser } from "./UserApi";
+import { read, update, updateUser } from "./apiUser";
 import { Redirect } from "react-router-dom";
-import image from "../images/avatar.png";
-import { API } from "../urlConfig";
+import DefaultProfile from "../images/avatar.jpg";
+import { API } from "../configUrl";
 
 class EditProfile extends Component {
   constructor() {
@@ -45,7 +45,7 @@ class EditProfile extends Component {
   }
 
   isValid = () => {
-    const { name, email, password, fileSize,about } = this.state;
+    const { name, email, password, fileSize } = this.state;
     if (fileSize > 1000000) {
       this.setState({
         error: "File size should be less than 100kb",
@@ -57,10 +57,6 @@ class EditProfile extends Component {
       this.setState({ error: "Name is required", loading: false });
       return false;
     }
-    if (about.length === 0) {
-        this.setState({ error: "about is required", loading: false });
-        return false;
-      }
     // email@domain.com
     if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
       this.setState({
@@ -186,8 +182,10 @@ class EditProfile extends Component {
     }
 
     const photoUrl = id
-      ? `${API}/user/photo/${id}?${new Date().getTime()}`
-      : image;
+      ? `${
+          API
+        }/user/photo/${id}?${new Date().getTime()}`
+      : DefaultProfile;
 
     return (
       <div className="container">
@@ -211,7 +209,7 @@ class EditProfile extends Component {
           style={{ height: "200px", width: "auto" }}
           className="img-thumbnail"
           src={photoUrl}
-          onError={i => (i.target.src = `${image}`)}
+          onError={i => (i.target.src = `${DefaultProfile}`)}
           alt={name}
         />
 

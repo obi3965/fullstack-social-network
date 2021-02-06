@@ -1,13 +1,7 @@
-import React, { Component } from 'react'
-import { follow, unfollow } from './UserApi'
+import React, { Component } from "react";
+import { follow, unfollow } from "./apiUser";
 
-/**
-* @author
-* @class FollowProfile
-**/
-
-class FollowProfile extends Component {
-
+class FollowProfileButton extends Component {
     followClick = () => {
         this.props.onButtonClick(follow);
     };
@@ -15,7 +9,7 @@ class FollowProfile extends Component {
     unfollowClick = () => {
         this.props.onButtonClick(unfollow);
     };
- 
+
     render() {
         return (
             <div className="d-inline-block">
@@ -37,8 +31,6 @@ class FollowProfile extends Component {
             </div>
         );
     }
- }
+}
 
-
-
-export default FollowProfile
+export default FollowProfileButton;

@@ -1,26 +1,28 @@
 import React, { Component } from "react";
 import { isAuthenticated } from "../auth";
-import { read } from "../user/UserApi";
-import { Link, Redirect } from "react-router-dom";
-import image from '../images/avatar.png'
+import { Redirect, Link } from "react-router-dom";
+import { read } from "./apiUser";
+import DefaultProfile from "../images/avatar.jpg";
 import DeleteUser from "./DeleteUser";
-import { API } from "../urlConfig";
-import FollowProfile from "./FollowProfile";
-
+import FollowProfileButton from "./FollowProfileButton";
+import ProfileTabs from "./ProfileTabs";
+import { listByUser } from "../post/apiPost";
+import { API } from "../configUrl";
 
 class Profile extends Component {
- constructor(){
-    super()
-        this.state = {
-            user: {following: [], followers: []},
-            following: false,
-            redirectToSignin: false,
-            error: "",
-        }
-    }
+  constructor() {
+    super();
+    this.state = {
+      user: { following: [], followers: [] },
+      redirectToSignin: false,
+      following: false,
+      error: "",
+      posts: []
+    };
+  }
 
-     // check follow
-    checkFollow = user => {
+  // check follow
+  checkFollow = user => {
     const jwt = isAuthenticated();
     const match = user.followers.find(follower => {
       // one id has many other ids (followers) and vice versa
@@ -29,104 +31,148 @@ class Profile extends Component {
     return match;
   };
 
-    clickFollowButton = callApi => {
-      const userId = isAuthenticated().user._id;
-      const token = isAuthenticated().token;
-  
-      callApi(userId, token, this.state.user._id).then(data => {
-        if (data.error) {
-          this.setState({ error: data.error });
-        } else {
-          this.setState({ user: data, following: !this.state.following });
-        }
-      });
-    };
+  clickFollowButton = callApi => {
+    const userId = isAuthenticated().user._id;
+    const token = isAuthenticated().token;
 
-    init = userId => {
-        const token = isAuthenticated().token;
-        read(userId, token).then(data => {
-            
-          if (data.error) {
-            this.setState({ redirectToSignin: true });
-          } else {
-            let following = this.checkFollow(data);
-            this.setState({ user: data, following });
-           
-          }
-        });
-      };
-     
- 
-componentDidMount () {
-  const userId = this.props.match.params.userId;
-  this.init(userId)
-}
+    callApi(userId, token, this.state.user._id).then(data => {
+      if (data.error) {
+        this.setState({ error: data.error });
+      } else {
+        this.setState({ user: data, following: !this.state.following });
+      }
+    });
+  };
 
-componentWillReceiveProps(props) {
-  const userId = props.match.params.userId;
-  this.init(userId);
-}
+  init = userId => {
+    const token = isAuthenticated().token;
+    read(userId, token).then(data => {
+      if (data.error) {
+        this.setState({ redirectToSignin: true });
+      } else {
+        let following = this.checkFollow(data);
+        this.setState({ user: data, following });
+        this.loadPosts(data._id);
+      }
+    });
+  };
 
- render() {
-  const { redirectToSignin, user } = this.state;
-  if (redirectToSignin) return <Redirect to="/signin" />;
-  const photoUrl = user._id
-  ? `${API}/user/photo/${
-      user._id
-    }?${new Date().getTime()}`
-  : image;
+  loadPosts = userId => {
+    const token = isAuthenticated().token;
+    listByUser(userId, token).then(data => {
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        this.setState({ posts: data });
+      }
+    });
+  };
 
-  return(
-   <div className="container">
-      <div className="row mt-4 mx-auto d-flex justify-content-center align-items-center">
-          <div className="col-lg-4 col-md-6 col-sm-6 col-sm-12">
-              <div className="profile">
-              <img
+  componentDidMount() {
+    const userId = this.props.match.params.userId;
+    this.init(userId);
+  }
+
+  componentWillReceiveProps(props) {
+    const userId = props.match.params.userId;
+    this.init(userId);
+  }
+
+  render() {
+    const { redirectToSignin, user, posts } = this.state;
+    if (redirectToSignin) return <Redirect to="/signin" />;
+
+    const photoUrl = user._id
+      ? `${API}/user/photo/${
+          user._id
+        }?${new Date().getTime()}`
+      : DefaultProfile;
+
+    return (
+      <div className="container">
+        <h2 className="mt-5 mb-5">Profile</h2>
+        <div className="row">
+          <div className="col-md-4">
+            <img
               style={{ height: "200px", width: "auto" }}
               className="img-thumbnail"
               src={photoUrl}
-              onError={i => (i.target.src = `${image}`)}
+              onError={i => (i.target.src = `${DefaultProfile}`)}
               alt={user.name}
             />
-                  
-              </div>
           </div>
-          <div className="col-lg-8 col-md-6 col-sm-6 col-sm-12">
-                  <p> Name {user.name}</p>
-                  <p> email {user.email}</p>
-                  <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
-            {isAuthenticated().user._id === this.state.user._id ? (
-              <div className="d-inline-block mt-5">
+
+          <div className="col-md-8">
+            <div className="lead mt-2">
+              <p>Hello {user.name}</p>
+              <p>Email: {user.email}</p>
+              <p>{`Joined ${new Date(user.created).toDateString()}`}</p>
+            </div>
+
+            {isAuthenticated().user &&
+            isAuthenticated().user._id === user._id ? (
+              <div className="d-inline-block">
                 <Link
-                  className="btn btn-raised btn-info "
+                  className="btn btn-raised btn-info mr-5"
+                  to={`/post/create`}
+                >
+                  Create Post
+                </Link>
+
+                <Link
+                  className="btn btn-raised btn-success mr-5"
                   to={`/user/edit/${user._id}`}
                 >
-                  edit profile
+                  Edit Profile
                 </Link>
-
-                <Link>
-                 <DeleteUser userId={user._id}/>
-                </Link>
+                <DeleteUser userId={user._id} />
               </div>
-            ):(
-              <FollowProfile
-              following={this.state.following}
-              onButtonClick={this.clickFollowButton}
+            ) : (
+              <FollowProfileButton
+                following={this.state.following}
+                onButtonClick={this.clickFollowButton}
               />
             )}
-          </div>
-      </div>
 
-      <div className="row m-auto">
-        <div className="col-md-4">
-          <p>{user.about}</p>
+            <div>
+              {isAuthenticated().user &&
+                isAuthenticated().user.role === "admin" && (
+                  <div class="card mt-5">
+                    <div className="card-body">
+                      <h5 className="card-title">Admin</h5>
+                      <p className="mb-2 text-danger">
+                        Edit/Delete as an Admin
+                      </p>
+                      <Link
+                        className="btn btn-raised btn-success mr-5"
+                        to={`/user/edit/${user._id}`}
+                      >
+                        Edit Profile
+                      </Link>
+                      {/*<DeleteUser userId={user._id} />*/}
+                      <DeleteUser />
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col md-12 mt-5 mb-5">
+            <hr />
+            <p className="lead">{user.about}</p>
+            <hr />
+
+            <ProfileTabs
+              followers={user.followers}
+              following={user.following}
+              posts={posts}
+            />
+          </div>
         </div>
       </div>
-   </div>
-    )
-   }
- }
+    );
+  }
+}
 
-
-
-export default Profile
+export default Profile;

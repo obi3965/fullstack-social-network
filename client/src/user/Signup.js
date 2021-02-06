@@ -1,144 +1,164 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { Component } from "react";
 import { signup } from "../auth";
+import { Link } from "react-router-dom";
 
-import "../css/signup.css";
 
-const Signup = () => {
-  
-  const [values, setValues] = useState({
-    name: "",
-    email: "",
-    password: "",
-    error: "",
-    success: false,
-  });
+class Signup extends Component {
+    constructor() {
+        super();
+        this.state = {
+            name: "",
+            email: "",
+            password: "",
+            error: "",
+            open: false,
+            recaptcha: false
+        };
+    }
 
-  const { name, email, password, success, error } = values;
+    handleChange = name => event => {
+        this.setState({ error: "" });
+        this.setState({ [name]: event.target.value });
+    };
 
-  const handleChange = (name) => (event) => {
-    setValues({ ...values, error: false, [name]: event.target.value });
-  };
+    recaptchaHandler = e => {
+        this.setState({ error: "" });
+        let userDay = e.target.value.toLowerCase();
+        let dayCount;
 
-  // const showLoading = () =>
-  //   loading ? <div className="alert alert-info">Loading...</div> : "";
-  const clickSubmit = (event) => {
-    event.preventDefault();
-    setValues({ ...values, error: false });
-    signup({ name, email, password }).then((data) => {
-      if (data.error) {
-        setValues({ ...values, error: data.error, success: false });
-      } else {
-        setValues({
-          ...values,
-          name: "",
-          email: "",
-          password: "",
-          error: "",
-          success: true,
-        });
-      }
-    });
-  };
+        if (userDay === "sunday") {
+            dayCount = 0;
+        } else if (userDay === "monday") {
+            dayCount = 1;
+        } else if (userDay === "tuesday") {
+            dayCount = 2;
+        } else if (userDay === "wednesday") {
+            dayCount = 3;
+        } else if (userDay === "thursday") {
+            dayCount = 4;
+        } else if (userDay === "friday") {
+            dayCount = 5;
+        } else if (userDay === "saturday") {
+            dayCount = 6;
+        }
 
-  const showError = () => (
-    <div
-      className="alert bg-danger alert-danger text-white"
-      style={{ display: error ? "" : "none" }}
-    >
-      {error}
-    </div>
-  );
+        if (dayCount === new Date().getDay()) {
+            this.setState({ recaptcha: true });
+            return true;
+        } else {
+            this.setState({
+                recaptcha: false
+            });
+            return false;
+        }
+    };
 
-  const showSuccess = () => (
-    <div
-      className="alert alert-info"
-      style={{ display: success ? "" : "none" }}
-    >
-      New account is created. Please <Link to="/signin">Signin</Link>
-    </div>
-  );
+    clickSubmit = event => {
+        event.preventDefault();
+        const { name, email, password } = this.state;
+        const user = {
+            name,
+            email,
+            password
+        };
+        // console.log(user);
+        if (this.state.recaptcha) {
+            signup(user).then(data => {
+                if (data.error) this.setState({ error: data.error });
+                else
+                    this.setState({
+                        error: "",
+                        name: "",
+                        email: "",
+                        password: "",
+                        open: true
+                    });
+            });
+        } else {
+            this.setState({
+                error: "What day is today? Please write a correct answer!"
+            });
+        }
+    };
 
-  return (
-    <div className="container">
-      <div className="header-title">
-        <h1>
-          <span>OBIGRAM</span> - it's free
-        </h1>
-      </div>
-      <div className="row mx-auto">
-        <div className="col-md-4 mx-auto text-center">
-          {showSuccess()}
-          {showError()}
-          
-        </div>
-      </div>
-      <div className="row">
-        <div className="col-md-4 mx-auto">
-          <div className="myform form ">
-            <form name="login">
-              <div className="form-group mt-1">
+    signupForm = (name, email, password, recaptcha) => (
+        <form>
+            <div className="form-group">
+                <label className="text-muted">Name</label>
                 <input
-                  type="text"
-                  name="name"
-                  value={name}
-                  onChange={handleChange("name")}
-                  className="form-control my-input"
-                  id="name"
-                  placeholder="Name"
-                  autoComplete="off"
+                    onChange={this.handleChange("name")}
+                    type="text"
+                    className="form-control"
+                    value={name}
                 />
-              </div>
-              <div className="form-group mt-2">
+            </div>
+            <div className="form-group">
+                <label className="text-muted">Email</label>
                 <input
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={handleChange("email")}
-                  className="form-control my-input"
-                  id="email"
-                  placeholder="Email"
-                  autoComplete="off"
+                    onChange={this.handleChange("email")}
+                    type="email"
+                    className="form-control"
+                    value={email}
                 />
-              </div>
-              <div className="form-group mt-2">
+            </div>
+            <div className="form-group">
+                <label className="text-muted">Password</label>
                 <input
-                  type="password"
-                  value={password}
-                  onChange={handleChange("password")}
-                  name="password"
-                  id="password"
-                  className="form-control my-input"
-                  placeholder="Your Password"
-                  autoComplete="off"
+                    onChange={this.handleChange("password")}
+                    type="password"
+                    className="form-control"
+                    value={password}
                 />
-              </div>
-              <div className="text-center mt-2 ">
-                <button
-                  type="submit"
-                  onClick={clickSubmit}
-                  className=" btn btn-block send-button tx-tfm"
+            </div>
+
+            <div className="form-group">
+                <label className="text-muted">
+                    {recaptcha ? "Thanks. You got it!" : "What day is today?"}
+                </label>
+
+                <input
+                    onChange={this.recaptchaHandler}
+                    type="text"
+                    className="form-control"
+                />
+            </div>
+
+            <button
+                onClick={this.clickSubmit}
+                className="btn btn-raised btn-primary"
+            >
+                Submit
+            </button>
+        </form>
+    );
+
+    render() {
+        const { name, email, password, error, open, recaptcha } = this.state;
+        return (
+            <div className="container">
+                <h2 className="mt-5 mb-5">Signup</h2>
+
+               
+
+                <div
+                    className="alert alert-danger"
+                    style={{ display: error ? "" : "none" }}
                 >
-                  signup
-                </button>
-              </div>
-              <div className="col-md-12 ">
-                <div className="login-or">
-                  <hr className="hr-or" />
-                  <span className="span-or">or</span>
+                    {error}
                 </div>
-              </div>
-              <div className="form-group">
-                <Link className="btn btn-block g-button" to="">
-                  <i className="fa fa-google" /> Sign up with Google
-                </Link>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+
+                <div
+                    className="alert alert-info"
+                    style={{ display: open ? "" : "none" }}
+                >
+                    New account is successfully created. Please{" "}
+                    <Link to="/signin">Sign In</Link>.
+                </div>
+
+                {this.signupForm(name, email, password, recaptcha)}
+            </div>
+        );
+    }
+}
 
 export default Signup;

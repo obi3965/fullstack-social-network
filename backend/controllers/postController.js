@@ -1,11 +1,11 @@
 const Post = require("../models/Post");
 const formidable = require("formidable");
 const fs = require("fs");
-const lodash = require("lodash");
+const _ = require('lodash');
 
 
 
-exports.postById = async (req, res, next, id) => {
+exports.postById = (req, res, next, id) => {
     Post.findById(id)
     .populate('postedBy', '_id name')
     .populate('comments.postedBy', '_id name')
@@ -24,96 +24,103 @@ exports.postById = async (req, res, next, id) => {
     
             
 
-exports.create = async (req, res, next) => {
-  try {
-    let form = new formidable.IncomingForm();
+exports.createPost = (req, res, next) => {
+  let form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.parse(req, (err, fields, files) => {
-      if (err) {
-        return res.status(400).json({
-          err: "Image could not be uploaded",
+        if (err) {
+            return res.status(400).json({
+                error: 'Image could not be uploaded'
+            });
+        }
+        let post = new Post(fields);
+
+        req.profile.hashed_password = undefined;
+        req.profile.salt = undefined;
+        post.postedBy = req.profile;
+
+        if (files.photo) {
+            post.photo.data = fs.readFileSync(files.photo.path);
+            post.photo.contentType = files.photo.type;
+        }
+        post.save((err, result) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            }
+            res.json(result);
         });
-      }
-      let post = new Post(fields);
-      req.profile.hashed_password = undefined;
-      req.profile.salt = undefined;
-      post.postedBy = req.profile;
-
-      if (files.photo) {
-        post.photo.data = fs.readFileSync(files.photo.path);
-        post.photo.contentType = files.photo.type;
-      }
-
-      const posts = post.save();
-      res.json({
-        posts: posts,
-      });
     });
-  } catch (err) {
-    res.status(400).json({
-      err: "post not created",
-    });
-  }
 };
 
 
-exports.getPosts = async (req, res) => {
-  try {
-    const posts = await Post.find()
-      .populate("postedBy", "_id name")
-      .populate("comments", "text created")
-      .populate("comments.postedBy", "_id name")
-      .select("_id title body created likes")
-      .sort({ created: -1 });
-    res.status(200).json({
-      posts,
-    });
-  } catch (err) {
-    res.status(404).json({
-      err: "posts not found",
-    });
-  }
-
-};
 
 
-exports.postsByUser = async (req, res) => {
-  try {
-    const postUser = await Post.find({ postedBy: req.profile._id })
-      .populate("postedBy", "_id name")
-      .select("_id title body created likes")
-      .sort("_created");
+//get the posts with pagination
+exports.getPosts = async (req,res)=>{
+// get current page from req.query or use default value of 1
+const currentPage = req.query.page || 1;
+// return 3 posts per page
+const perPage = 6;
+let totalItems;
 
-    res.status(200).json({
-      postUser,
-    });
-  } catch (error) {
-    res.status(400).json({
-      err: "posts by user is not found",
-    });
-  }
+const posts = await Post.find()
+    // countDocuments() gives you total count of posts
+    .countDocuments()
+    .then(count => {
+        totalItems = count;
+        return Post.find()
+            .skip((currentPage - 1) * perPage)
+            .populate('comments', 'text created')
+            .populate('comments.postedBy', '_id name')
+            .populate('postedBy', '_id name')
+            .select('_id title body created likes')
+            .limit(perPage)
+            .sort({ created: -1 });
+    })
+    .then(posts => {
+        res.status(200).json(posts);
+    })
+    .catch(err => console.log(err));
+  
+}
+
+exports.postsByUser = (req, res) => {
+  Post.find({ postedBy: req.profile._id })
+        .populate('postedBy', '_id name')
+        .select('_id title body created likes')
+        .sort('_created')
+        .exec((err, posts) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            }
+            res.json(posts);
+        });
 };
 
 
 exports.isPoster = async (req, res, next) => {
-    let sameUser = req.post && req.auth && req.post.postedBy._id == req.auth._id;
-    let adminUser = req.post && req.auth && req.auth.role === 'admin';
+  let sameUser = req.post && req.auth && req.post.postedBy._id == req.auth._id;
+  let adminUser = req.post && req.auth && req.auth.role === 'admin';
 
-    // console.log("req.post ", req.post, " req.auth ", req.auth);
-    // console.log("SAMEUSER: ", sameUser, " ADMINUSER: ", adminUser);
+  // console.log("req.post ", req.post, " req.auth ", req.auth);
+  // console.log("SAMEUSER: ", sameUser, " ADMINUSER: ", adminUser);
 
-    let isPoster = sameUser || adminUser;
+  let isPoster = sameUser || adminUser;
 
-    if (!isPoster) {
-        return res.status(403).json({
-            error: 'User is not authorized'
-        });
-    }
-    next();
+  if (!isPoster) {
+      return res.status(403).json({
+          error: 'User is not authorized'
+      });
+  }
+  next();
 };
 
 exports.updatePost = (req, res) => {
-    let form = new formidable.IncomingForm();
+  let form = new formidable.IncomingForm();
     form.keepExtensions = true;
     form.parse(req, (err, fields, files) => {
         if (err) {
@@ -123,7 +130,7 @@ exports.updatePost = (req, res) => {
         }
         // save post
         let post = req.post;
-        post = lodash.extend(post, fields);
+        post = _.extend(post, fields);
         post.updated = Date.now();
 
         if (files.photo) {
@@ -137,10 +144,11 @@ exports.updatePost = (req, res) => {
                     error: err
                 });
             }
-            res.json(result);
+            res.json(post);
         });
     });
-};
+
+  }
 
 
 exports.deletePost = async (req,res) => {
@@ -156,3 +164,114 @@ exports.deletePost = async (req,res) => {
     });
   }
 }
+
+exports.singlePost = (req, res) => {
+    return res.json(req.post);
+};
+
+
+//like and unlike
+exports.like =(req,res) =>{
+
+  Post.findByIdAndUpdate(req.body.postId, { $push: { likes: req.body.userId } }, { new: true }).exec(
+    (err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: err
+            });
+        } else {
+            res.json(result);
+        }
+    }
+);
+}
+
+exports.unlike =(req,res) =>{
+
+  Post.findByIdAndUpdate(req.body.postId, { $pull: { likes: req.body.userId } }, { new: true }).exec(
+    (err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: err
+            });
+        } else {
+            res.json(result);
+        }
+    }
+);
+}
+
+
+
+//comments
+exports.comment = (req,res) => {
+  let comment = req.body.comment;
+  comment.postedBy = req.body.userId;
+
+  Post.findByIdAndUpdate(req.body.postId, { $push: { comments: comment } }, { new: true })
+      .populate('comments.postedBy', '_id name')
+      .populate('postedBy', '_id name')
+      .exec((err, result) => {
+          if (err) {
+              return res.status(400).json({
+                  error: err
+              });
+          } else {
+              res.json(result);
+          }
+      });
+};
+
+exports.uncomment = (req, res) => {
+  let comment = req.body.comment;
+
+  Post.findByIdAndUpdate(req.body.postId, { $pull: { comments: { _id: comment._id } } }, { new: true })
+      .populate('comments.postedBy', '_id name')
+      .populate('postedBy', '_id name')
+      .exec((err, result) => {
+          if (err) {
+              return res.status(400).json({
+                  error: err
+              });
+          } else {
+              res.json(result);
+          }
+      });
+};
+
+
+
+exports.updateComment = (req, res) => {
+  let comment = req.body.comment;
+
+  Post.findByIdAndUpdate(req.body.postId, { $pull: { comments: { _id: comment._id } } }).exec((err, result) => {
+      if (err || !result) {
+          return res.status(400).json({
+              error: err
+          });
+      } else {
+          Post.findByIdAndUpdate(
+              req.body.postId,
+              { $push: { comments: comment, updated: new Date() } },
+              { new: true }
+          )
+              .populate('comments.postedBy', '_id name')
+              .populate('postedBy', '_id name')
+              .exec((err, result) => {
+                  if (err) {
+                      return res.status(400).json({
+                          error: err
+                      });
+                  } else {
+                      res.json(result);
+                  }
+              });
+      }
+  });
+};
+
+
+exports.photo = (req, res, next) => {
+  res.set('Content-Type', req.post.photo.contentType);
+  return res.send(req.post.photo.data);
+};
